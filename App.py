@@ -2,14 +2,18 @@ import streamlit as st
 import nltk
 import spacy
 nltk.download('stopwords')
+# Chargement du modèle spaCy (anglais)
 nlp = spacy.load('en_core_web_sm')
+
+from langdetect import detect, DetectorFactory
+DetectorFactory.seed = 0  # rendre la détection déterministe
 
 import pandas as pd
 import base64, random, time, datetime, json, re
-from pdfminer3.layout import LAParams
-from pdfminer3.pdfpage import PDFPage
-from pdfminer3.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer3.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import TextConverter
 import io
 from streamlit_tags import st_tags
 from PIL import Image
@@ -67,16 +71,22 @@ def course_recommender(course_list):
 def extract_resume_data(text):
     doc = nlp(text)
 
+    # Nom (entité PERSON) — si plusieurs, on prend la première
     name = next((ent.text for ent in doc.ents if ent.label_ == "PERSON"), "Non détecté")
+    # Email (regex)
     email = re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
+    # Téléphone (regex basique)
     phone = re.findall(r"\+?\d[\d\s().-]{8,}\d", text)
     pages = text.count("\f") + 1
 
-    # Skills extraction
+    # Skills extraction (liste basique - tu peux enrichir)
     skills_list = [
-        "Python","Java","C++","SQL","Machine Learning","Deep Learning",
-        "Data Science","Flask","Streamlit","React","Node.js","MongoDB",
-        "Tensorflow","Keras","Pytorch","HTML","CSS","JavaScript","Angular","Django","PHP"
+        "Pandas", "NumPy", "Seaborn", "Matplotlib", "Scikit-learn", "GridSearchCV",
+        "TensorFlow", "OpenCV", "CNN", "VGG19", "Transfer Learning",
+        "YOLO", "EasyOCR", "Python", "Streamlit", "LangChain", "FAISS",
+        "HuggingFace", "Embeddings", "Llama 3", "LLM",
+        "Java", "JavaScript", "React.js", "Node.js", "C++", "C#", "SQL",
+        "Express.js", "MongoDB", "SCRUM", "GitHub", "Trello", "Jira", "Slack", "ClickUp"
     ]
     found_skills = [s for s in skills_list if s.lower() in text.lower()]
 
@@ -89,7 +99,13 @@ def extract_resume_data(text):
     }
 
 # ----------------- DATABASE -----------------
-connection = pymysql.connect(host='localhost', user='root', password='root')
+# Connexion MySQL (XAMPP par défaut: user=root, password vide)
+connection = pymysql.connect(
+    host='localhost', 
+    user='root', 
+    password='',  # Mot de passe vide par défaut pour XAMPP
+    port=3306
+)
 cursor = connection.cursor()
 
 cursor.execute("CREATE DATABASE IF NOT EXISTS SRA;")
@@ -123,15 +139,19 @@ def insert_data(name, email, res_score, timestamp, no_of_pages, reco_field, cand
     connection.commit()
 
 # ----------------- STREAMLIT APP -----------------
-st.set_page_config(page_title="Smart Resume Analyzer", page_icon='./Logo/SRA_Logo.ico')
+st.set_page_config(page_title="Smart Resume Analyzer", page_icon='./Logo/logo.png', layout='centered')
 
 def run():
     st.title("Smart Resume Analyzer")
     st.sidebar.header("Choose User")
     choice = st.sidebar.selectbox("Choose:", ["Normal User", "Admin"])
 
-    img = Image.open('./Logo/SRA_Logo.jpg')
-    st.image(img.resize((250, 250)))
+    # Logo
+    try:
+        img = Image.open('./Logo/logo.png')
+        st.image(img,  use_container_width=True)
+    except Exception:
+        pass
 
     if choice == "Normal User":
         pdf_file = st.file_uploader("Upload your Resume (PDF)", type=["pdf"])
@@ -139,7 +159,10 @@ def run():
             save_path = f'./Uploaded_Resumes/{pdf_file.name}'
             with open(save_path, "wb") as f:
                 f.write(pdf_file.getbuffer())
-            show_pdf(save_path)
+            try:
+                show_pdf(save_path)
+            except Exception:
+                pass
 
             resume_text = pdf_reader(save_path)
             resume_data = extract_resume_data(resume_text)
@@ -154,7 +177,7 @@ def run():
             # Skills
             st_tags(label='### Skills Detected', value=resume_data['skills'], key='skills_detected')
 
-            # Candidate Level
+            # Candidate Level based on pages
             pages = resume_data['no_of_pages']
             if pages == 1:
                 cand_level = "Fresher"
@@ -164,7 +187,7 @@ def run():
                 cand_level = "Experienced"
             st.markdown(f"**Candidate Level:** {cand_level}")
 
-            # Recommendations
+            # Recommendations by skill
             reco_field, recommended_skills, rec_course = '', [], []
             ds_keyword = ['tensorflow','keras','pytorch','machine learning','deep learning','flask','streamlit']
             web_keyword = ['react','django','node js','php','laravel','magento','wordpress','javascript','angular js','c#','flask']
@@ -202,15 +225,143 @@ def run():
 
             st_tags(label="### Recommended Skills", value=recommended_skills, key='recommended_skills')
 
-            # Resume Tips & Score
-            st.subheader("Resume Tips & Ideas")
-            resume_score = 0
-            for key in ['Objective','Declaration','Hobbies','Achievements','Projects']:
-                if key.lower() in resume_text.lower():
-                    resume_score += 20
-            st.subheader(f"Resume Score: {resume_score}/100")
+            # ----------------- Sections à vérifier (détection FR/EN) -----------------
+            # Dictionnaires de sections en anglais et français (poids inchangés)
+            sections_en = {
+                "Objective": 5,
+                "Summary": 10,
+                "Education": 15,
+                "Professional Experience": 20,
+                "Skills": 20,
+                "Projects": 20,
+                "Languages": 10,
+                "Certifications": 5
+            }
 
-            # Insert into DB
+            sections_fr = {
+                "Objectif": 5,
+                "Profil": 10,
+                "Formation": 15,
+                "Expérience Professionnelle": 20,
+                "Compétences": 20,
+                "Projets": 20,
+                "Langues": 5,
+                "Certifications": 5
+            }
+            # === Synonymes supplémentaires (pour plus de flexibilité) ===
+            synonyms = {
+                "Professional Experience": ["experience", "work experience", "professional experience"],
+                "Expérience Professionnelle": ["expérience", "experience professionnelle"],
+                "Skills": ["skills", "technical skills", "competencies"],
+                "Compétences": ["compétences", "compétences techniques"],
+                "Summary": ["summary", "profile"],
+                "Profil": ["profil", "résumé"]
+            }
+
+            # Détection de la langue (français si detect renvoie 'fr*' sinon anglais)
+            try:
+                lang = detect(resume_text)
+            except Exception:
+                lang = 'en'
+
+            if str(lang).startswith('fr'):
+                sections = sections_fr
+                lang_label = "Français"
+            else:
+                sections = sections_en
+                lang_label = "Anglais"
+
+            resume_text_lower = resume_text.lower()
+            found_sections = []
+            missing_sections = []
+            resume_score = 0
+
+            # Évaluer la présence de chaque section (recherche simple du titre)
+            for section, weight in sections.items():
+                section_found = False
+
+                # Vérifie si le titre exact est dans le texte
+                if section.lower() in resume_text_lower:
+                    resume_score += weight
+                    section_found = True
+                    found_sections.append(section)
+                else:
+                    # Vérifie les synonymes possibles
+                    if section in synonyms:
+                        for syn in synonyms[section]:
+                            if syn.lower() in resume_text_lower:
+                                resume_score += weight
+                                section_found = True
+                                found_sections.append(section)
+                                break
+
+                # Si la section n’a pas été trouvée du tout
+                if not section_found:
+                    missing_sections.append(section)
+
+            # Limiter le score à 100 max
+            if resume_score > 100:
+                resume_score = 100
+
+
+            # --- AFFICHAGE ---
+            st.subheader("📋 Resume Tips & Evaluation")
+
+            # Barre de progression
+            st.progress(resume_score / 100)
+            st.markdown(f"**Resume Score:** 🎯 {resume_score}/100")
+            st.write(f"**Language Detected:** {lang_label}")
+
+            # Section Analysis
+            col1, col2 = st.columns(2)
+            with col1:
+                st.success("✅ **Identified Sections:**")
+                if found_sections:
+                    for sec in found_sections:
+                        st.write(f"• {sec}")
+                else:
+                    st.write("No key sections identified.")
+                    
+            with col2:
+                st.warning("⚠️ **Recommended Improvements:**")
+                if missing_sections:
+                    for sec in missing_sections:
+                        st.write(f"• {sec}")
+                else:
+                    st.write("All essential sections are present.")
+
+            # Improvement suggestions
+            if missing_sections:
+                st.info("💡 **Recommendations for Resume Enhancement**")
+                tips_en = {
+                    "Objective": "Add a short professional objective summarizing your career goals.",
+                    "Summary": "Include a summary that highlights your strengths and experience.",
+                    "Education": "Mention your degrees, institutions, and graduation dates.",
+                    "Experience": "Detail your work experience with measurable results.",
+                    "Skills": "List both technical and soft skills relevant to your field.",
+                    "Projects": "Include a few key projects demonstrating your practical skills.",
+                    "Achievements": "Mention awards, certifications, or special recognitions.",
+                    "Hobbies": "Add hobbies if they reflect creativity, teamwork, or leadership."
+                }
+                tips_fr = {
+                    "Objectif": "Ajoute un objectif professionnel court résumant tes objectifs de carrière.",
+                    "Profil": "Inclure un résumé qui met en avant tes forces et ton expérience.",
+                    "Formation": "Indique tes diplômes, établissements et dates.",
+                    "Experience": "Détaille tes expériences avec des résultats mesurables.",
+                    "Compétences": "Liste les compétences techniques et comportementales pertinentes.",
+                    "Projets": "Ajoute quelques projets clés montrant ton travail concret.",
+                    "Réalisations": "Mentionne distinctions, certifications ou résultats remarquables.",
+                    "Loisirs": "Ajoute des loisirs qui montrent créativité, esprit d'équipe ou leadership."
+                }
+                for sec in missing_sections:
+                    if str(lang).startswith('fr'):
+                        tip = tips_fr.get(sec, "")
+                    else:
+                        tip = tips_en.get(sec, "")
+                    if tip:
+                        st.write(f"- **{sec}:** {tip}")
+
+            # ----------------- Insert into DB -----------------
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             insert_data(resume_data['name'], resume_data['email'], str(resume_score), timestamp,
                         str(resume_data['no_of_pages']), reco_field, cand_level, resume_data['skills'],
@@ -218,14 +369,20 @@ def run():
 
             # Bonus videos
             st.header("Resume Tips Video")
-            vid = random.choice(resume_videos)
-            st.subheader(fetch_yt_video(vid))
-            st.video(vid)
+            try:
+                vid = random.choice(resume_videos)
+                st.subheader(fetch_yt_video(vid))
+                st.video(vid)
+            except Exception:
+                pass
 
             st.header("Interview Tips Video")
-            vid2 = random.choice(interview_videos)
-            st.subheader(fetch_yt_video(vid2))
-            st.video(vid2)
+            try:
+                vid2 = random.choice(interview_videos)
+                st.subheader(fetch_yt_video(vid2))
+                st.video(vid2)
+            except Exception:
+                pass
 
     else:
         st.subheader("Admin Panel")
@@ -239,16 +396,25 @@ def run():
                                                  'Predicted Field','User Level','Actual Skills','Recommended Skills','Recommended Courses'])
                 # Decode JSON columns
                 for col in ['Actual Skills','Recommended Skills','Recommended Courses']:
-                    df[col] = df[col].apply(lambda x: ', '.join(json.loads(x)))
+                    try:
+                        df[col] = df[col].apply(lambda x: ', '.join(json.loads(x)) if x else '')
+                    except Exception:
+                        pass
                 st.dataframe(df)
                 st.markdown(get_table_download_link(df, 'User_Data.csv','Download Report'), unsafe_allow_html=True)
 
                 st.subheader("Predicted Field Distribution")
-                fig = px.pie(df, names='Predicted Field', title='Field Distribution')
-                st.plotly_chart(fig)
+                try:
+                    fig = px.pie(df, names='Predicted Field', title='Field Distribution')
+                    st.plotly_chart(fig)
+                except Exception:
+                    pass
                 st.subheader("Experience Levels Distribution")
-                fig2 = px.pie(df, names='User Level', title='Experience Levels')
-                st.plotly_chart(fig2)
+                try:
+                    fig2 = px.pie(df, names='User Level', title='Experience Levels')
+                    st.plotly_chart(fig2)
+                except Exception:
+                    pass
             else:
                 st.error("Wrong credentials!")
 
