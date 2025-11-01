@@ -1,4 +1,4 @@
-ds_course = [['Machine Learning Crash Course by Google [Free]', 'https://developers.google.com/machine-learning/crash-course'],
+data_science_course = [['Machine Learning Crash Course by Google [Free]', 'https://developers.google.com/machine-learning/crash-course'],
              ['Machine Learning A-Z by Udemy','https://www.udemy.com/course/machinelearning/'],
              ['Machine Learning by Andrew NG','https://www.coursera.org/learn/machine-learning'],
              ['Data Scientist Master Program of Simplilearn (IBM)','https://www.simplilearn.com/big-data-and-analytics/senior-data-scientist-masters-program-training'],
@@ -9,7 +9,7 @@ ds_course = [['Machine Learning Crash Course by Google [Free]', 'https://develop
              ['Introduction to Data Science','https://www.udacity.com/course/introduction-to-data-science--cd0017'],
              ['Intro to Machine Learning with TensorFlow','https://www.udacity.com/course/intro-to-machine-learning-with-tensorflow-nanodegree--nd230']]
 
-web_course = [['Django Crash course [Free]','https://youtu.be/e1IyzVyrLSU'],
+web_development_course = [['Django Crash course [Free]','https://youtu.be/e1IyzVyrLSU'],
               ['Python and Django Full Stack Web Developer Bootcamp','https://www.udemy.com/course/python-and-django-full-stack-web-developer-bootcamp'],
               ['React Crash Course [Free]','https://youtu.be/Dorf8i6lCuk'],
               ['ReactJS Project Development Training','https://www.dotnettricks.com/training/masters-program/reactjs-certification-training'],
@@ -20,7 +20,7 @@ web_course = [['Django Crash course [Free]','https://youtu.be/e1IyzVyrLSU'],
               ['Front End Web Developer by Udacity','https://www.udacity.com/course/front-end-web-developer-nanodegree--nd0011'],
               ['Become a React Developer by Udacity','https://www.udacity.com/course/react-nanodegree--nd019']]
 
-android_course = [['Android Development for Beginners [Free]','https://youtu.be/fis26HvvDII'],
+android_development_course = [['Android Development for Beginners [Free]','https://youtu.be/fis26HvvDII'],
                   ['Android App Development Specialization','https://www.coursera.org/specializations/android-app-development'],
                   ['Associate Android Developer Certification','https://grow.google/androiddev/#?modal_active=none'],
                   ['Become an Android Kotlin Developer by Udacity','https://www.udacity.com/course/android-kotlin-developer-nanodegree--nd940'],
@@ -31,7 +31,7 @@ android_course = [['Android Development for Beginners [Free]','https://youtu.be/
                   ['Flutter & Dart - The Complete Flutter App Development Course','https://www.udemy.com/course/flutter-dart-the-complete-flutter-app-development-course/'],
                   ['Flutter App Development Course [Free]','https://youtu.be/rZLR5olMR64']]
 
-ios_course = [['IOS App Development by LinkedIn','https://www.linkedin.com/learning/subscription/topics/ios'],
+ios_development_course = [['IOS App Development by LinkedIn','https://www.linkedin.com/learning/subscription/topics/ios'],
               ['iOS & Swift - The Complete iOS App Development Bootcamp','https://www.udemy.com/course/ios-13-app-development-bootcamp/'],
               ['Become an iOS Developer','https://www.udacity.com/course/ios-developer-nanodegree--nd003'],
               ['iOS App Development with Swift Specialization','https://www.coursera.org/specializations/app-development'],
@@ -41,7 +41,7 @@ ios_course = [['IOS App Development by LinkedIn','https://www.linkedin.com/learn
               ['Learn Swift by Codecademy','https://www.codecademy.com/learn/learn-swift'],
               ['Swift Tutorial - Full Course for Beginners [Free]','https://youtu.be/comQ1-x2a1Q'],
               ['Learn Swift Fast - [Free]','https://youtu.be/FcsY1YPBwzQ']]
-uiux_course = [['Google UX Design Professional Certificate','https://www.coursera.org/professional-certificates/google-ux-design'],
+uiux_development_course = [['Google UX Design Professional Certificate','https://www.coursera.org/professional-certificates/google-ux-design'],
                ['UI / UX Design Specialization','https://www.coursera.org/specializations/ui-ux-design'],
                ['The Complete App Design Course - UX, UI and Design Thinking','https://www.udemy.com/course/the-complete-app-design-course-ux-and-ui-design/'],
                ['UX & Web Design Master Course: Strategy, Design, Development','https://www.udemy.com/course/ux-web-design-master-course-strategy-design-development/'],
@@ -52,12 +52,12 @@ uiux_course = [['Google UX Design Professional Certificate','https://www.courser
                ['Adobe XD for Beginners [Free]','https://youtu.be/WEljsc2jorI'],
                ['Adobe XD in Simple Way','https://learnux.io/course/adobe-xd']]
 
-resume_videos = ['https://youtu.be/y8YH0Qbu5h4','https://youtu.be/J-4Fv8nq1iA',
-                 'https://youtu.be/yp693O87GmM','https://youtu.be/UeMmCex9uTU',
-                 'https://youtu.be/dQ7Q8ZdnuN0','https://youtu.be/HQqqQx5BCFY',
-                 'https://youtu.be/CLUsplI4xMU','https://youtu.be/pbczsLkv7Cc']
+resume_videos = ['https://www.youtube.com/watch?v=9VU5TAYYZ4A','https://www.youtube.com/watch?v=yUZraaLi6x4',
+                 'https://www.youtube.com/watch?v=Tt08KmFfIYQ','https://www.youtube.com/watch?v=7apj4sVvbro',
+                 'https://www.youtube.com/watch?v=tHQXZJ2f00Y&t=118s','https://youtu.be/HQqqQx5BCFY',
+                 'https://www.youtube.com/watch?v=MAIM8qK0rXw','https://youtu.be/pbczsLkv7Cc']
 
-interview_videos = ['https://youtu.be/Ji46s5BHdr0','https://youtu.be/seVxXHi2YMs',
-                    'https://youtu.be/9FgfsLa_SmY','https://youtu.be/2HQmjLu-6RQ',
-                    'https://youtu.be/DQd_AlIvHUw','https://youtu.be/oVVdezJ0e7w'
-                    'https://youtu.be/JZK1MZwUyUU','https://youtu.be/CyXLhHQS3KY']
+interview_videos = ['https://www.youtube.com/watch?v=Ji46s5BHdr0','https://www.youtube.com/watch?v=DzbFBgGUGdU',
+                    'https://www.youtube.com/watch?v=9FgfsLa_SmY','https://www.youtube.com/watch?v=ZMByWenSRdI',
+                    'https://www.youtube.com/watch?v=0k0Uc9uAJwk','https://www.youtube.com/watch?v=0siE31sqz0Q',
+                    'https://www.youtube.com/watch?v=fr-mwiyhZAo','https://www.youtube.com/watch?v=toJYgrOFAKg']

@@ -18,7 +18,7 @@ import io
 from streamlit_tags import st_tags
 from PIL import Image
 import pymysql
-from Courses import ds_course, web_course, android_course, ios_course, uiux_course, resume_videos, interview_videos
+from Courses import data_science_course, web_development_course, android_development_course, ios_development_course, uiux_development_course, resume_videos, interview_videos
 import pafy
 import plotly.express as px
 
@@ -245,35 +245,61 @@ def run():
 
             # Recommendations by skill
             reco_field, recommended_skills, rec_course = '', [], []
-            # --- Définition des catégories de compétences ---
-            ds_keyword = ['tensorflow','keras','pytorch','machine learning','deep learning','flask','streamlit','data science','pandas','numpy','scikit-learn','matplotlib','seaborn','sql']
-            web_keyword = ['react','django','node js','php','laravel','magento','wordpress','javascript','angular js','angular','c#','html','css','flask','express','typescript']
-            android_keyword = ['android','flutter','kotlin','xml','kivy','java']
-            ios_keyword = ['ios','swift','xcode','cocoa','cocoa touch']
-            uiux_keyword = ['ux','ui','figma','adobe xd','wireframes','prototyping','user experience','user interface']
+            # --- Définition des domaines et mots-clés ---
+            domain_keywords = {
+                'Data Science': [
+                    'python','pandas','numpy','matplotlib','seaborn','scikit-learn',
+                    'tensorflow','keras','pytorch','machine learning','deep learning',
+                    'data analysis','data visualization','flask','streamlit','sql','statistics'
+                ],
+                'Data Engineering': [
+                    'data engineer','etl','pipeline','data pipeline','airflow','apache airflow',
+                    'big data','hadoop','spark','pyspark','hive','pig','kafka','data warehouse',
+                    'snowflake','redshift','data lake','data ingestion','data transformation',
+                    'data modeling','sql','nosql','azure data factory','aws glue'
+                ],
+                'Web Development': [
+                    'html','css','javascript','react','angular','vue','node js','express',
+                    'django','flask','php','laravel','typescript','nextjs','mongodb','mysql'
+                ],
+                'Android Development': [
+                    'android','java','kotlin','flutter','xml','android studio','kivy'
+                ],
+                'IOS Development': [
+                    'ios','swift','xcode','objective c','cocoa','cocoa touch'
+                ],
+                'UIUX Development': [
+                    'ui','ux','figma','adobe xd','wireframe','prototyping',
+                    'user interface','user experience','illustrator','photoshop'
+                ],
+                'DevOps': [
+                    'docker','kubernetes','jenkins','ci/cd','ansible','terraform',
+                    'linux','bash','prometheus','grafana','gitlab ci','monitoring','automation'
+                ],
+                'Cybersecurity': [
+                    'penetration testing','network security','vulnerability analysis',
+                    'nmap','wireshark','metasploit','firewall','encryption','ethical hacking',
+                    'incident response','ids','ips','malware analysis','cybersecurity'
+                ],
+                'Cloud Computing': [
+                    'aws','azure','gcp','cloud','lambda','s3','ec2','cloud storage',
+                    'kubernetes','terraform','devops','serverless','cloud computing'
+                ],
+                'Database Management': [
+                    'sql','mysql','postgresql','mongodb','redis','database design',
+                    'nosql','oracle','query optimization'
+                ]
+            }
 
             # --- Initialisation des compteurs ---
-            scores = {
-                'Data Science': 0,
-                'Web Development': 0,
-                'Android Development': 0,
-                'IOS Development': 0,
-                'UI-UX Development': 0
-            }
+            scores = {domain: 0 for domain in domain_keywords.keys()}
 
             # --- Comptage des correspondances ---
             for skill in resume_data['skills']:
                 sk = skill.lower()
-                if sk in ds_keyword:
-                    scores['Data Science'] += 1
-                if sk in web_keyword:
-                    scores['Web Development'] += 1
-                if sk in android_keyword:
-                    scores['Android Development'] += 1
-                if sk in ios_keyword:
-                    scores['IOS Development'] += 1
-                if sk in uiux_keyword:
-                    scores['UI-UX Development'] += 1
+                for domain, keywords in domain_keywords.items():
+                    if sk in keywords:
+                        scores[domain] += 1
 
             # --- Filtrer les domaines avec au moins une compétence détectée ---
             detected_domains = {domain: count for domain, count in scores.items() if count > 0}
@@ -295,31 +321,35 @@ def run():
 
             st.write(f"✅ Domaine détecté : **{reco_field}** ({max_score} compétences détectées)")
 
-            # --- Recommandations associées ---
-            recommended_skills, rec_course = [], []
+            # --- Recommandations par domaine (excluant les compétences déjà présentes) ---
+            all_recommendations = {
+                'Data Science': ['Data Visualization','Predictive Analysis','ML Algorithms','Keras','Tensorflow','Pytorch','Flask','Streamlit','Statistics','Big Data','Power BI','SQL'],
+                'Data Engineering': ['ETL Design','Airflow','Data Pipeline Automation','PySpark','Hadoop','Kafka','Data Lake Architecture','BigQuery','Snowflake','Data Modeling'],
+                'Web Development': ['React','Node.js','Django','PHP','JavaScript','MongoDB','Express','HTML','CSS','TypeScript','Next.js'],
+                'Android Development': ['Android','Flutter','Kotlin','XML','Java'],
+                'IOS Development': ['iOS','Swift','Xcode','Objective C','Cocoa'],
+                'UI-UX Development': ['Figma','Adobe XD','Wireframes','Prototyping','User Testing'],
+                'DevOps': ['Docker','Kubernetes','CI/CD','Ansible','Terraform','Linux','GitLab CI','Prometheus','Monitoring'],
+                'Cybersecurity': ['Penetration Testing','Nmap','Wireshark','Metasploit','IDS/IPS','Incident Response','Encryption','Vulnerability Analysis'],
+                'Cloud Computing': ['AWS','Azure','GCP','Serverless','Cloud Functions','Terraform','Cloud Security'],
+                'Database Management': ['SQL Optimization','Database Design','Replication','Indexing','MongoDB Aggregation']
+            }
 
-            if reco_field == "Data Science":
-                recommended_skills = ['Data Visualization','Predictive Analysis','ML Algorithms','Keras','Tensorflow','Pytorch','Flask','Streamlit']
-                rec_course = course_recommender(ds_course)
+            # --- Exclure les compétences déjà présentes ---
+            user_skills_lower = [s.lower() for s in resume_data['skills']]
+            recommended_skills = [
+                skill for skill in all_recommendations.get(reco_field, [])
+                if skill.lower() not in user_skills_lower
+            ]
 
-            elif reco_field == "Web Development":
-                recommended_skills = ['React','Node.js','Django','PHP','JavaScript','MongoDB','Express','HTML','CSS']
-                rec_course = course_recommender(web_course)
-
-            elif reco_field == "Android Development":
-                recommended_skills = ['Android','Flutter','Kotlin','XML','Java']
-                rec_course = course_recommender(android_course)
-
-            elif reco_field == "IOS Development":
-                recommended_skills = ['iOS','Swift','Xcode','Cocoa']
-                rec_course = course_recommender(ios_course)
-
-            elif reco_field == "UI-UX Development":
-                recommended_skills = ['Figma','Adobe XD','Wireframes','Prototyping']
-                rec_course = course_recommender(uiux_course)
+            # --- Appel du système de recommandation de cours ---
+            rec_course = []
+            if reco_field != "Unknown":
+                rec_course = course_recommender(globals().get(f"{reco_field.lower().replace(' ', '_')}_course", []))
 
             # --- Affichage final ---
             st_tags(label="### Recommended Skills", value=recommended_skills, key='recommended_skills')
+
 
 
 
