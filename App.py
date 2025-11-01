@@ -77,17 +77,74 @@ def extract_resume_data(text):
     email = re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
     # Téléphone (regex basique)
     phone = re.findall(r"\+?\d[\d\s().-]{8,}\d", text)
-    pages = text.count("\f") + 1
+    pages = text.count("\f")
 
     # Skills extraction (liste basique - tu peux enrichir)
     skills_list = [
-        "Pandas", "NumPy", "Seaborn", "Matplotlib", "Scikit-learn", "GridSearchCV",
-        "TensorFlow", "OpenCV", "CNN", "VGG19", "Transfer Learning",
-        "YOLO", "EasyOCR", "Python", "Streamlit", "LangChain", "FAISS",
-        "HuggingFace", "Embeddings", "Llama 3", "LLM",
-        "Java", "JavaScript", "React.js", "Node.js", "C++", "C#", "SQL",
-        "Express.js", "MongoDB", "SCRUM", "GitHub", "Trello", "Jira", "Slack", "ClickUp"
-    ]
+    # --- Langages de programmation ---
+    "Python", "Java", "C", "C++", "C#", "R", "Go", "Rust", "Scala", "PHP", 
+    "JavaScript", "TypeScript", "Swift", "Kotlin", "Ruby", "MATLAB", "Perl",
+
+    # --- Web Development ---
+    "HTML", "CSS", "SASS", "Bootstrap", "Tailwind", "React", "Next.js", "Vue.js",
+    "Angular", "Django", "Flask", "FastAPI", "Node.js", "Express.js", "Laravel",
+    "Spring Boot", "ASP.NET", "WordPress", "REST API", "GraphQL",
+
+    # --- Data Science & Machine Learning ---
+    "Machine Learning", "Deep Learning", "Data Science", "Data Analysis",
+    "Data Visualization", "Natural Language Processing", "Computer Vision",
+    "Predictive Modeling", "Reinforcement Learning", "MLOps", "AutoML",
+
+    # --- Frameworks & Libraries ---
+    "TensorFlow", "Keras", "PyTorch", "Scikit-learn", "Pandas", "NumPy",
+    "Matplotlib", "Seaborn", "OpenCV", "NLTK", "spaCy", "Hugging Face", 
+    "Transformers", "XGBoost", "LightGBM", "CatBoost", "Statsmodels",
+
+    # --- Databases ---
+    "SQL", "MySQL", "PostgreSQL", "SQLite", "MongoDB", "Firebase", 
+    "Oracle", "Redis", "Elasticsearch", "Cassandra", "Neo4j",
+
+    # --- Cloud & DevOps ---
+    "AWS", "Azure", "Google Cloud", "GCP", "Docker", "Kubernetes", "CI/CD",
+    "Jenkins", "Terraform", "Ansible", "GitLab CI", "GitHub Actions", "Linux",
+    "Nginx", "Apache", "DevOps", "Shell Scripting", "Bash", "Linux Administration",
+
+    # --- Data Engineering / Big Data ---
+    "Apache Spark", "Hadoop", "Kafka", "Airflow", "ETL", "Data Pipeline",
+    "Snowflake", "Databricks", "Hive", "Pig", "Power BI", "Tableau", "Excel",
+    "Data Warehouse", "BigQuery", "Data Lake", "NoSQL",
+
+    # --- Mobile Development ---
+    "Android", "iOS", "Flutter", "React Native", "SwiftUI", "Xcode",
+    "XML", "Jetpack Compose", "Kivy",
+
+    # --- UI/UX & Design ---
+    "UI Design", "UX Design", "Figma", "Adobe XD", "Sketch", "InVision",
+    "Wireframes", "Prototyping", "User Research", "Design Thinking",
+
+    # --- Cybersecurity ---
+    "Cybersecurity", "Network Security", "Penetration Testing", "Ethical Hacking",
+    "Kali Linux", "Wireshark", "Metasploit", "OWASP", "Cryptography", "Firewall",
+    "Vulnerability Assessment", "Incident Response", "SOC", "SIEM", "IDS", "IPS",
+
+    # --- Project Management / Tools ---
+    "Agile", "Scrum", "Kanban", "JIRA", "Trello", "Asana", "Notion",
+    "Git", "GitHub", "GitLab", "Bitbucket", "Slack", "Confluence",
+    "Continuous Integration", "Continuous Deployment", "Version Control",
+
+    # --- Soft Skills / Autres compétences techniques ---
+    "Problem Solving", "Teamwork", "Leadership", "Communication",
+    "Time Management", "Critical Thinking", "Analytical Skills",
+    "Cloud Computing", "API Development", "Microservices Architecture",
+    "Software Testing", "Unit Testing", "Integration Testing", "Automation",
+    "Selenium", "Postman", "JMeter", "Cypress", "TestNG", "PyTest",
+    "Blockchain", "Smart Contracts", "Solidity", "Web3", "NFT", "Metaverse",
+
+    # --- AI Specialized Areas ---
+    "Generative AI", "LLM", "Prompt Engineering", "LangChain", "Vector Database",
+    "Pinecone", "ChromaDB", "FAISS", "RAG", "OpenAI API", "ChatGPT API",
+    "Speech Recognition", "Text-to-Speech", "Voice Cloning"
+]
     found_skills = [s for s in skills_list if s.lower() in text.lower()]
 
     return {
@@ -103,8 +160,7 @@ def extract_resume_data(text):
 connection = pymysql.connect(
     host='localhost', 
     user='root', 
-    password='',  # Mot de passe vide par défaut pour XAMPP
-    port=3306
+    password='root',  # Mot de passe vide par défaut pour XAMPP
 )
 cursor = connection.cursor()
 
@@ -189,59 +245,99 @@ def run():
 
             # Recommendations by skill
             reco_field, recommended_skills, rec_course = '', [], []
-            ds_keyword = ['tensorflow','keras','pytorch','machine learning','deep learning','flask','streamlit']
-            web_keyword = ['react','django','node js','php','laravel','magento','wordpress','javascript','angular js','c#','flask']
-            android_keyword = ['android','flutter','kotlin','xml','kivy']
+            # --- Définition des catégories de compétences ---
+            ds_keyword = ['tensorflow','keras','pytorch','machine learning','deep learning','flask','streamlit','data science','pandas','numpy','scikit-learn','matplotlib','seaborn','sql']
+            web_keyword = ['react','django','node js','php','laravel','magento','wordpress','javascript','angular js','angular','c#','html','css','flask','express','typescript']
+            android_keyword = ['android','flutter','kotlin','xml','kivy','java']
             ios_keyword = ['ios','swift','xcode','cocoa','cocoa touch']
-            uiux_keyword = ['ux','figma','adobe xd','wireframes','prototyping']
+            uiux_keyword = ['ux','ui','figma','adobe xd','wireframes','prototyping','user experience','user interface']
 
+            # --- Initialisation des compteurs ---
+            scores = {
+                'Data Science': 0,
+                'Web Development': 0,
+                'Android Development': 0,
+                'IOS Development': 0,
+                'UI-UX Development': 0
+            }
+
+            # --- Comptage des correspondances ---
             for skill in resume_data['skills']:
                 sk = skill.lower()
                 if sk in ds_keyword:
-                    reco_field = "Data Science"
-                    recommended_skills = ['Data Visualization','Predictive Analysis','ML Algorithms','Keras','Tensorflow','Pytorch','Flask','Streamlit']
-                    rec_course = course_recommender(ds_course)
-                    break
-                elif sk in web_keyword:
-                    reco_field = "Web Development"
-                    recommended_skills = ['React','Node.js','Django','PHP','JavaScript']
-                    rec_course = course_recommender(web_course)
-                    break
-                elif sk in android_keyword:
-                    reco_field = "Android Development"
-                    recommended_skills = ['Android','Flutter','Kotlin','XML']
-                    rec_course = course_recommender(android_course)
-                    break
-                elif sk in ios_keyword:
-                    reco_field = "IOS Development"
-                    recommended_skills = ['iOS','Swift','Xcode','Cocoa']
-                    rec_course = course_recommender(ios_course)
-                    break
-                elif sk in uiux_keyword:
-                    reco_field = "UI-UX Development"
-                    recommended_skills = ['Figma','Adobe XD','Wireframes','Prototyping']
-                    rec_course = course_recommender(uiux_course)
-                    break
+                    scores['Data Science'] += 1
+                if sk in web_keyword:
+                    scores['Web Development'] += 1
+                if sk in android_keyword:
+                    scores['Android Development'] += 1
+                if sk in ios_keyword:
+                    scores['IOS Development'] += 1
+                if sk in uiux_keyword:
+                    scores['UI-UX Development'] += 1
 
+            # --- Filtrer les domaines avec au moins une compétence détectée ---
+            detected_domains = {domain: count for domain, count in scores.items() if count > 0}
+
+            # --- Détermination du domaine dominant ---
+            if detected_domains:
+                reco_field = max(detected_domains, key=detected_domains.get)
+                max_score = detected_domains[reco_field]
+            else:
+                reco_field = "Unknown"
+                max_score = 0
+
+            # --- Affichage du détail du comptage ---
+            st.write("### Détails des correspondances détectées :")
+            if detected_domains:
+                st.json(detected_domains)
+            else:
+                st.info("Aucun domaine détecté à partir des compétences du CV.")
+
+            st.write(f"✅ Domaine détecté : **{reco_field}** ({max_score} compétences détectées)")
+
+            # --- Recommandations associées ---
+            recommended_skills, rec_course = [], []
+
+            if reco_field == "Data Science":
+                recommended_skills = ['Data Visualization','Predictive Analysis','ML Algorithms','Keras','Tensorflow','Pytorch','Flask','Streamlit']
+                rec_course = course_recommender(ds_course)
+
+            elif reco_field == "Web Development":
+                recommended_skills = ['React','Node.js','Django','PHP','JavaScript','MongoDB','Express','HTML','CSS']
+                rec_course = course_recommender(web_course)
+
+            elif reco_field == "Android Development":
+                recommended_skills = ['Android','Flutter','Kotlin','XML','Java']
+                rec_course = course_recommender(android_course)
+
+            elif reco_field == "IOS Development":
+                recommended_skills = ['iOS','Swift','Xcode','Cocoa']
+                rec_course = course_recommender(ios_course)
+
+            elif reco_field == "UI-UX Development":
+                recommended_skills = ['Figma','Adobe XD','Wireframes','Prototyping']
+                rec_course = course_recommender(uiux_course)
+
+            # --- Affichage final ---
             st_tags(label="### Recommended Skills", value=recommended_skills, key='recommended_skills')
+
+
 
             # ----------------- Sections à vérifier (détection FR/EN) -----------------
             # Dictionnaires de sections en anglais et français (poids inchangés)
             sections_en = {
-                "Objective": 5,
                 "Summary": 10,
-                "Education": 15,
+                "Education": 20,
                 "Professional Experience": 20,
                 "Skills": 20,
                 "Projects": 20,
-                "Languages": 10,
+                "Languages": 5,
                 "Certifications": 5
             }
 
             sections_fr = {
-                "Objectif": 5,
                 "Profil": 10,
-                "Formation": 15,
+                "Formation": 20,
                 "Expérience Professionnelle": 20,
                 "Compétences": 20,
                 "Projets": 20,
@@ -389,7 +485,7 @@ def run():
         ad_user = st.text_input("Username")
         ad_password = st.text_input("Password", type='password')
         if st.button("Login"):
-            if ad_user == "admin" and ad_password == "admin":
+            if ad_user == "root" and ad_password == "root":
                 cursor.execute("SELECT * FROM user_data")
                 data = cursor.fetchall()
                 df = pd.DataFrame(data, columns=['ID','Name','Email','Resume Score','Timestamp','Total Page',
